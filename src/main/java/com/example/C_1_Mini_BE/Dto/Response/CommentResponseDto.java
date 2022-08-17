@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor //전체 변수를 생성하는 생성자
 public class CommentResponseDto {
     private Long id;
-    private String nickname;
+    private String username;
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;

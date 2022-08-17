@@ -26,9 +26,6 @@ public class User extends Timestamped{
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String nickname;
-
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY
             ,cascade = CascadeType.REMOVE)
     private List<Post> postList;

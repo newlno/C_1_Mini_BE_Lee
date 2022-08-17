@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor //전체 변수를 생성하는 생성자
 public class PostResponseDto {
     private Long id;
-    private String nickname;
+    private String username;
     private String title;
     private String content;
     private String imgUrl;

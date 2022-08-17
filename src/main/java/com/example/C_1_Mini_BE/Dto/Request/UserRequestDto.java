@@ -12,6 +12,5 @@ import java.time.LocalDateTime;
 @AllArgsConstructor //전체 변수를 생성하는 생성자
 public class UserRequestDto {
     private String username;
-    private String nickname;
     private String password;
 }

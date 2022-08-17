@@ -56,7 +56,7 @@ public class PostService {
         return ResponseDto.success(
                 PostResponseDto.builder()
                         .id(post.getId())
-                        .nickname(post.getUser().getNickname())
+                        .username(post.getUser().getUsername())
                         .title(post.getTitle())
                         .content(post.getContent())
                         .imgUrl(post.getImgUrl())
@@ -81,7 +81,7 @@ public class PostService {
             commentResponseDtoList.add(
                     CommentResponseDto.builder()
                             .id(comment.getId())
-                            .nickname(comment.getUser().getNickname())
+                            .username(comment.getUser().getUsername())
                             .content(comment.getContent())
                             .createdAt(comment.getCreatedAt())
                             .modifiedAt(comment.getModifiedAt())
@@ -92,7 +92,7 @@ public class PostService {
         return ResponseDto.success(
                 PostResponseDto.builder()
                         .id(post.getId())
-                        .nickname(post.getUser().getNickname())
+                        .username(post.getUser().getUsername())
                         .title(post.getTitle())
                         .content(post.getContent())
                         .imgUrl(post.getImgUrl())
@@ -111,7 +111,7 @@ public class PostService {
             int comments = commentRepository.countAllByPost(post);
             AllPostResponseDto allPostResponseDto = AllPostResponseDto.builder()
                     .id(post.getId())
-                    .nickname(post.getUser().getNickname())
+                    .username(post.getUser().getUsername())
                     .title(post.getTitle())
                     .imgUrl(post.getImgUrl())
                     .commentsNum(comments)
@@ -138,7 +138,7 @@ public class PostService {
         post.update(requestDto);
         return ResponseDto.success(PostResponseDto.builder()
                 .id(post.getId())
-                .nickname(post.getUser().getNickname())
+                .username(post.getUser().getUsername())
                 .content(post.getContent())
                 .imgUrl(post.getImgUrl())
                 .createdAt(post.getCreatedAt())

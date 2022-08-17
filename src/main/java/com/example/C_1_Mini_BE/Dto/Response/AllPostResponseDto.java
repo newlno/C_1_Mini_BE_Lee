@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor //전체 변수를 생성하는 생성자
 public class AllPostResponseDto {
     private Long id;
-    private String nickname;
+    private String username;
     private String title;
     private String imgUrl;
     private int commentsNum;

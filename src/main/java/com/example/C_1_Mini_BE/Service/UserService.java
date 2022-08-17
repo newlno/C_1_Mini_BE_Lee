@@ -34,14 +34,9 @@ public class UserService {
             return ResponseDto.fail("DUPLICATED_USERNAME",
                     "중복된 아이디 입니다.");
         }
-        if (null != isPresentNickname(requestDto.getNickname())) {
-            return ResponseDto.fail("DUPLICATED_NICKNAME",
-                    "중복된 닉네임 입니다.");
-        }
         // 비밀번호 암호화를 위해 빌더패턴 사용
         User user = User.builder()
                 .username(requestDto.getUsername())
-                .nickname(requestDto.getNickname())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .build();
         userRepository.save(user);
@@ -49,7 +44,6 @@ public class UserService {
                 UserResponseDto.builder()
                         .id(user.getId())
                         .username(user.getUsername())
-                        .nickname(user.getNickname())
                         .createdAt(user.getCreatedAt())
                         .build()
         );
@@ -72,7 +66,6 @@ public class UserService {
                 UserResponseDto.builder()
                         .id(user.getId())
                         .username(user.getUsername())
-                        .nickname(user.getNickname())
                         .createdAt(user.getCreatedAt())
                         .build()
         );
@@ -87,17 +80,9 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findByUsername(username);
         return optionalUser.orElse(null);
     }
-    // 닉네임 중복검사 및 찾기
-    @Transactional // 선언적 트랜잭션, 중간에 에러나면 없던 일로 처리해줌
-    public User isPresentNickname(String username) {
-        Optional<User> optionalNickname = userRepository.findByNickname(username);
-        return optionalNickname.orElse(null);
-    }
 
     public void tokenToHeaders(TokenDto tokenDto, HttpServletResponse response) {
         response.addHeader("Authorization", "Bearer " + tokenDto.getAccessToken());
-        response.addHeader("Refresh-Token", tokenDto.getRefreshToken());
-        response.addHeader("Access-Token-Expire-Time", tokenDto.getAccessTokenExpiresIn().toString());
     }
 
 }
