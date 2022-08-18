@@ -13,17 +13,16 @@ import java.io.IOException;
 
 @Component
 public class AuthenticationEntryPointException implements
-    AuthenticationEntryPoint {
+        AuthenticationEntryPoint {
 
-  @Override
-  public void commence(HttpServletRequest request, HttpServletResponse response,
-      AuthenticationException authException) throws IOException {
-    response.setContentType("application/json;charset=UTF-8");
-    response.getWriter().println(
-        new ObjectMapper().writeValueAsString(
-            ResponseDto.fail("BAD_REQUEST", "로그인이 필요합니다.")
-        )
-    );
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-  }
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
+        String result = objectMapper.writeValueAsString(ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다."));
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+        response.getWriter().write(result);
+    }
 }

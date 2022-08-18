@@ -2,7 +2,6 @@ package com.example.C_1_Mini_BE.Jwt;
 
 
 import com.example.C_1_Mini_BE.Dto.Request.TokenDto;
-import com.example.C_1_Mini_BE.Model.Authority;
 import com.example.C_1_Mini_BE.Model.User;
 import com.example.C_1_Mini_BE.Model.UserDetailsImpl;
 import io.jsonwebtoken.*;
@@ -23,10 +22,11 @@ import java.util.Date;
 @Component
 public class TokenProvider {
 
-  private static final String AUTHORITIES_KEY = "auth";
   private static final String BEARER_PREFIX = "Bearer ";
 
   private final Key key;
+
+  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30;
 
 
   public TokenProvider(@Value("${jwt.secret}") String secretKey) {
@@ -35,33 +35,23 @@ public class TokenProvider {
   }
 
   public TokenDto generateTokenDto(User user) {
-
+    long now = (new Date().getTime());
+    Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
     String accessToken = Jwts.builder()
             // 여기서 맴버의 닉네임을 넣어줌
             .setSubject(user.getUsername())
-            .claim(AUTHORITIES_KEY, Authority.ROLE_MEMBER.toString())
             .signWith(key, SignatureAlgorithm.HS256)
+            .setExpiration(accessTokenExpiresIn)
             .compact();
 
     return TokenDto.builder()
             .grantType(BEARER_PREFIX)
             .accessToken(accessToken)
             .build();
-
   }
-
-
-  public User getUserFromAuthentication() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || AnonymousAuthenticationToken.class.
-            isAssignableFrom(authentication.getClass())) {
-      return null;
-    }
-    return ((UserDetailsImpl) authentication.getPrincipal()).getUser();
-  }
-
 
   public boolean validateToken(String token) {
+    System.out.println(token);
     try {
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
       // 여기서 토큰 검증함

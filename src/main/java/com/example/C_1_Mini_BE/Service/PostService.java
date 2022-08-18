@@ -10,11 +10,13 @@ import com.example.C_1_Mini_BE.Jwt.TokenProvider;
 import com.example.C_1_Mini_BE.Model.Comment;
 import com.example.C_1_Mini_BE.Model.Post;
 import com.example.C_1_Mini_BE.Model.User;
+import com.example.C_1_Mini_BE.Model.UserDetailsImpl;
 import com.example.C_1_Mini_BE.Repository.CommentRepository;
 import com.example.C_1_Mini_BE.Repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -27,25 +29,14 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final TokenProvider tokenProvider;
+
+
 
 
     // 게시글 생성
     @Transactional  // 선언적 트랜잭션, 중간에 에러나면 없던 일로 처리해줌
-    public ResponseDto<?> createPost(PostRequestDto requestDto, HttpServletRequest request) {
-        // 토큰 사용하여 로그인 검증
-        if (null == request.getHeader("Refresh-Token")) {
-            return ResponseDto.fail("MEMBER_NOT_FOUND",
-                    "로그인이 필요합니다.");
-        }
-        if (null == request.getHeader("Authorization")) {
-            return ResponseDto.fail("MEMBER_NOT_FOUND",
-                    "로그인이 필요합니다.");
-        }
-        User user = validateUser(request);
-        if (null == user) {
-            return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
+    public ResponseDto<?> createPost(PostRequestDto requestDto, UserDetailsImpl userDetailsImpl){
+        User user = userDetailsImpl.getUser();
         Post post = Post.builder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
@@ -56,7 +47,7 @@ public class PostService {
         return ResponseDto.success(
                 PostResponseDto.builder()
                         .id(post.getId())
-                        .username(post.getUser().getUsername())
+                        .username(userDetailsImpl.getUsername())
                         .title(post.getTitle())
                         .content(post.getContent())
                         .imgUrl(post.getImgUrl())
@@ -123,11 +114,8 @@ public class PostService {
 
     // 게시글 수정
     @Transactional
-    public ResponseDto<?> updatePost(Long id, PostRequestDto requestDto, HttpServletRequest request) {
-        User user = validateUser(request);
-        if (null == user) {
-            return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
+    public ResponseDto<?> updatePost(Long id, PostRequestDto requestDto, UserDetailsImpl userDetailsImpl) {
+        User user = userDetailsImpl.getUser();
         Post post = isPresentPost(id);
         if (null == post) {
             return ResponseDto.fail("NOT_FOUND", "존재하지 않는 게시글 ID 입니다.");
@@ -138,7 +126,7 @@ public class PostService {
         post.update(requestDto);
         return ResponseDto.success(PostResponseDto.builder()
                 .id(post.getId())
-                .username(post.getUser().getUsername())
+                .username(user.getUsername())
                 .content(post.getContent())
                 .imgUrl(post.getImgUrl())
                 .createdAt(post.getCreatedAt())
@@ -149,11 +137,8 @@ public class PostService {
 
     // 게시글 삭제
     @Transactional
-    public ResponseDto<?> deletePost(Long id, HttpServletRequest request) {
-        User user = validateUser(request);
-        if (null == user) {
-            return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
+    public ResponseDto<?> deletePost(Long id, UserDetailsImpl userDetailsImpl) {
+        User user = userDetailsImpl.getUser();
         Post post = isPresentPost(id);
         if (null == post) {
             return ResponseDto.fail("NOT_FOUND", "존재하지 않는 게시글 ID 입니다.");
@@ -172,13 +157,12 @@ public class PostService {
         return optionalPost.orElse(null);
     }
 
-//    // 토큰 사용시 검증 메소드
-    @Transactional
-    public User validateUser(HttpServletRequest request) {
-        if (!tokenProvider.validateToken(request.getHeader("Refresh-Token"))) {
-            return null;
+    // 이중검사한거임 <- 순서 확인
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
         }
-        return tokenProvider.getUserFromAuthentication();
+        return null;
     }
-
 }

@@ -2,6 +2,7 @@ package com.example.C_1_Mini_BE.Config;
 
 import com.example.C_1_Mini_BE.Jwt.AccessDeniedHandlerException;
 import com.example.C_1_Mini_BE.Jwt.AuthenticationEntryPointException;
+import com.example.C_1_Mini_BE.Jwt.JwtFilter;
 import com.example.C_1_Mini_BE.Jwt.TokenProvider;
 import com.example.C_1_Mini_BE.Service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +13,21 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import javax.annotation.PostConstruct;
+import java.util.Arrays;
+import java.util.TimeZone;
 
 @Configuration
 @EnableWebSecurity
@@ -33,9 +43,30 @@ public class SecurityConfiguration {
   private final AuthenticationEntryPointException authenticationEntryPointException;
   private final AccessDeniedHandlerException accessDeniedHandlerException;
 
+  // JVM 기본 시간대를 변경
+  @PostConstruct
+  public void start() {
+    TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+  }
+
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+
+  @Bean
+  CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+
+    configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+    configuration.setAllowedMethods(Arrays.asList("POST","GET","DELETE","PUT"));
+    configuration.setAllowedHeaders(Arrays.asList("*"));
+    configuration.setAllowCredentials(true);
+    configuration.addExposedHeader("AccessToken");
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
   }
 
   @Bean
@@ -45,24 +76,25 @@ public class SecurityConfiguration {
 
     http.csrf().disable()
 
-        .exceptionHandling()
-        .authenticationEntryPoint(authenticationEntryPointException)
-        .accessDeniedHandler(accessDeniedHandlerException)
+            .exceptionHandling()
+            .authenticationEntryPoint(authenticationEntryPointException)
+            .accessDeniedHandler(accessDeniedHandlerException)
 
-        .and()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
-        .and()
-        .authorizeRequests()
-        .antMatchers("/user/*").permitAll()
-        .antMatchers("/api/post").permitAll()
-        .antMatchers("/api/post/*").permitAll()
-        .antMatchers("/api/comment/*").permitAll()
-        .anyRequest().authenticated()
+            .and()
+            .authorizeRequests()
+            .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .antMatchers("/user/login").permitAll()
+            .antMatchers("/user/signup").permitAll()
+            .antMatchers(HttpMethod.GET,"/api/posts/**").permitAll()
+            .antMatchers(HttpMethod.GET,"/api/post/**").permitAll()
+            .anyRequest().authenticated()
 
-        .and()
-        .apply(new JwtSecurityConfiguration(SECRET_KEY, tokenProvider, userDetailsService));
+            .and()
+            .addFilterBefore(new JwtFilter(SECRET_KEY, tokenProvider, userDetailsService), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }

@@ -3,8 +3,10 @@ package com.example.C_1_Mini_BE.Controller;
 
 import com.example.C_1_Mini_BE.Dto.Request.CommentRequestDto;
 import com.example.C_1_Mini_BE.Dto.Response.ResponseDto;
+import com.example.C_1_Mini_BE.Model.UserDetailsImpl;
 import com.example.C_1_Mini_BE.Service.CommentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,21 +22,21 @@ public class CommentController {
     // 댓글 작성
     @PostMapping("/api/comment")
     public ResponseDto<?> createComment(@RequestBody CommentRequestDto requestDto,
-                                        HttpServletRequest request) {
-        return commentService.createComment(requestDto, request);
+                                        @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+        return commentService.createComment(requestDto, userDetailsImpl);
     }
 
     // 댓글 수정
     @PutMapping("/api/comment/{commentid}")
     public ResponseDto<?> updateComment(@PathVariable Long commentid, @RequestBody CommentRequestDto requestDto,
-                                        HttpServletRequest request) {
-        return commentService.updateComment(commentid, requestDto, request);
+                                        @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+        return commentService.updateComment(commentid, requestDto, userDetailsImpl);
     }
 
     // 댓글 삭제
     @DeleteMapping("/api/comment/{commentid}")
     public ResponseDto<?> deleteComment(@PathVariable Long commentid,
-                                        HttpServletRequest request) {
-        return commentService.deleteComment(commentid, request);
+                                        @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+        return commentService.deleteComment(commentid, userDetailsImpl);
     }
 }

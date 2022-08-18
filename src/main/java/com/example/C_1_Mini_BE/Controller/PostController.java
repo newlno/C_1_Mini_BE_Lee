@@ -3,8 +3,10 @@ package com.example.C_1_Mini_BE.Controller;
 
 import com.example.C_1_Mini_BE.Dto.Request.PostRequestDto;
 import com.example.C_1_Mini_BE.Dto.Response.ResponseDto;
+import com.example.C_1_Mini_BE.Model.UserDetailsImpl;
 import com.example.C_1_Mini_BE.Service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,8 +20,8 @@ public class PostController {
     // 게시글 작성
     @PostMapping("/api/post")
     public ResponseDto<?> createPost(@RequestBody PostRequestDto requestDto,
-                                     HttpServletRequest request) {
-        return postService.createPost(requestDto, request);
+                                     @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+        return postService.createPost(requestDto, userDetailsImpl);
     }
 
     // 게시글 개별조회
@@ -37,15 +39,15 @@ public class PostController {
     // 게시글 수정
     @PutMapping("/api/post/{id}")
     public ResponseDto<?> updatePost(@PathVariable Long id, @RequestBody PostRequestDto postRequestDto,
-                                     HttpServletRequest request) {
-        return postService.updatePost(id, postRequestDto, request);
+                                     @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+        return postService.updatePost(id, postRequestDto, userDetailsImpl);
     }
 
     // 게시글 삭제
     @DeleteMapping("/api/post/{id}")
     public ResponseDto<?> deletePost(@PathVariable Long id,
-                                     HttpServletRequest request) {
-        return postService.deletePost(id, request);
+                                     @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+        return postService.deletePost(id, userDetailsImpl);
     }
 
 }

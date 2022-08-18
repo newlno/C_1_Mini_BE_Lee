@@ -8,6 +8,7 @@ import com.example.C_1_Mini_BE.Jwt.TokenProvider;
 import com.example.C_1_Mini_BE.Model.Comment;
 import com.example.C_1_Mini_BE.Model.Post;
 import com.example.C_1_Mini_BE.Model.User;
+import com.example.C_1_Mini_BE.Model.UserDetailsImpl;
 import com.example.C_1_Mini_BE.Repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,22 +23,18 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostService postService;
-    private final TokenProvider tokenProvider;
 
     // 댓글 생성
     @Transactional
-    public ResponseDto<?> createComment(CommentRequestDto requestDto, HttpServletRequest request) {
-        User user = validateUser(request);
-        if (null == user) {
-            return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
+    public ResponseDto<?> createComment(CommentRequestDto requestDto, UserDetailsImpl userDetailsImpl) {
+        User user = userDetailsImpl.getUser();
         Post post = postService.isPresentPost(requestDto.getPostId());
         if (null == post) {
             return ResponseDto.fail("NOT_FOUND", "존재하지 않는 게시글 ID 입니다.");
         }
 
         Comment comment = Comment.builder()
-                .user(post.getUser())
+                .user(user)
                 .post(post)
                 .content(requestDto.getContent())
                 .build();
@@ -45,7 +42,7 @@ public class CommentService {
         return ResponseDto.success(
                 CommentResponseDto.builder()
                         .id(comment.getId())
-                        .username(comment.getUser().getUsername())
+                        .username(user.getUsername())
                         .content(comment.getContent())
                         .createdAt(comment.getCreatedAt())
                         .modifiedAt(comment.getModifiedAt())
@@ -55,11 +52,8 @@ public class CommentService {
 
     // 댓글 수정
     @Transactional
-    public ResponseDto<?> updateComment(Long id, CommentRequestDto requestDto, HttpServletRequest request) {
-        User user = validateUser(request);
-        if (null == user) {
-            return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
+    public ResponseDto<?> updateComment(Long id, CommentRequestDto requestDto, UserDetailsImpl userDetailsImpl) {
+        User user = userDetailsImpl.getUser();
         Post post = postService.isPresentPost(requestDto.getPostId());
         if (null == post) {
             return ResponseDto.fail("NOT_FOUND", "존재하지 않는 게시글 ID 입니다.");
@@ -75,7 +69,7 @@ public class CommentService {
         return ResponseDto.success(
                 CommentResponseDto.builder()
                         .id(comment.getId())
-                        .username(comment.getUser().getUsername())
+                        .username(user.getUsername())
                         .content(comment.getContent())
                         .createdAt(comment.getCreatedAt())
                         .modifiedAt(comment.getModifiedAt())
@@ -85,11 +79,8 @@ public class CommentService {
 
     // 댓글 삭제
     @Transactional
-    public ResponseDto<?> deleteComment(Long id, HttpServletRequest request) {
-        User user = validateUser(request);
-        if (null == user) {
-            return ResponseDto.fail("INVALID_TOKEN", "Token이 유효하지 않습니다.");
-        }
+    public ResponseDto<?> deleteComment(Long id, UserDetailsImpl userDetailsImpl) {
+        User user = userDetailsImpl.getUser();
         Comment comment = isPresentComment(id);
         if (null == comment) {
             return ResponseDto.fail("NOT_FOUND", "존재하지 않는 댓글 ID 입니다.");
@@ -107,14 +98,5 @@ public class CommentService {
     public Comment isPresentComment(Long id) {
         Optional<Comment> optionalComment = commentRepository.findById(id);
         return optionalComment.orElse(null);
-    }
-
-    // 토큰사용시 검증
-    @Transactional
-    public User validateUser(HttpServletRequest request) {
-        if (!tokenProvider.validateToken(request.getHeader("Refresh-Token"))) {
-            return null;
-        }
-        return tokenProvider.getUserFromAuthentication();
     }
 }
